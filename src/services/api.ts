@@ -3,8 +3,11 @@ import { message } from 'antd';
 
 // API configuration
 const API_CONFIG = {
-  baseURL: '/api',
-  timeout: 10000,
+  baseURL: 'http://xjk:8288', // 设置基础URL
+  timeout: 30000, // 请求超时时间
+  headers: {
+      'Content-Type': 'application/json',
+  },
 };
 
 // Create axios instance
