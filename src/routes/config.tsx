@@ -1,5 +1,5 @@
 import React from 'react';
-import { HomeOutlined, UserOutlined, SettingOutlined } from '@ant-design/icons';
+import { HomeOutlined, UserOutlined, SettingOutlined, TableOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 
 export interface RouteConfig {
@@ -17,6 +17,7 @@ const Profile = React.lazy(() => import('../pages/user/Profile'));
 const Settings = React.lazy(() => import('../pages/system/Settings'));
 const Login = React.lazy(() => import('../pages/auth/Login'));
 const NotFound = React.lazy(() => import('../pages/error/NotFound'));
+const AreaCodeView = React.lazy(() => import('../pages/area_code/AreaCodeView'));
 
 export const routes: RouteConfig[] = [
   {
@@ -44,6 +45,13 @@ export const routes: RouteConfig[] = [
     element: <Settings />,
     label: '系统设置',
     icon: <SettingOutlined />,
+    auth: true,
+  },
+  {
+    path: '/area-code/view',
+    element: <AreaCodeView />,
+    label: '区划管理',
+    icon: <TableOutlined />,
     auth: true,
   },
   {

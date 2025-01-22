@@ -1,22 +1,23 @@
-import api from './WinhcAxios';
-import Axios from 'axios';
-import {ReleaseSnapshotDataType} from "../data_types/ReleaseSnapshotDataType";
-import IPromise = Axios.IPromise;
+import { api } from './api';
+import { ReleaseSnapshotDataType } from "../data_types/ReleaseSnapshotDataType";
 
 // 获取区域代码列表
-export const getSnapshotByTimeRange = (subject: string, minData?: string | null | undefined, maxData?: string | null | undefined): IPromise<ReleaseSnapshotDataType[]> => {
-    const data = new Map<string, string>()
+export const getSnapshotByTimeRange = (
+    subject: string, 
+    minData?: string | null | undefined, 
+    maxData?: string | null | undefined
+) => {
+    const params: Record<string, string> = {};
     if (minData) {
-        data.set('min', minData)
+        params.min = minData;
     }
     if (maxData) {
-        data.set('max', maxData)
+        params.max = maxData;
     }
-    return api.get(`/snapshot/${subject}/time-range`, data as any) as unknown as IPromise<ReleaseSnapshotDataType[]>;
+    return api.get<ReleaseSnapshotDataType[]>(`/snapshot/${subject}/time-range`, { params });
 };
 
-
 // 撤销事件
-export const revokeLatestReleaseSnapshot = (subject: string): IPromise<string> => {
-    return api.get(`/snapshot/${subject}/revoke-latest`) as unknown as IPromise<string>;
+export const revokeLatestReleaseSnapshot = (subject: string) => {
+    return api.get<string>(`/snapshot/${subject}/revoke-latest`);
 };
