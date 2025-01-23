@@ -1,15 +1,16 @@
 import React, {useEffect, useState} from "react";
 import {Button, Modal, NotificationArgsProps} from 'antd';
-import axiosApi from '../../api/WinhcAxios';
+import {request} from '../../services/api';
 import {ProCard} from "@ant-design/pro-components";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 
 
 type NotificationPlacement = NotificationArgsProps['placement'];
 
 
-interface ShowHttpResultComponentProps {
-    requestInfo: Axios.AxiosXHRConfig<any>
-    responseHandler: (e: Axios.AxiosXHR<any>) => NoticeData,
+interface ShowHttpResultComponentProps<T> {
+    requestInfo: AxiosRequestConfig<T>,
+    responseHandler: (e: AxiosResponse<T>) => NoticeData,
     disabled?: boolean;
     inlineNode?: React.ReactNode;
     placement?: NotificationPlacement;
@@ -21,7 +22,7 @@ interface NoticeData {
     content: React.ReactNode,
 }
 
-const ShowHttpResultComponent: React.FC<ShowHttpResultComponentProps> = ({
+const ShowHttpResultComponent: React.FC<ShowHttpResultComponentProps<any>> = ({
                                                                              requestInfo,
                                                                              responseHandler,
                                                                              inlineNode,
@@ -36,7 +37,8 @@ const ShowHttpResultComponent: React.FC<ShowHttpResultComponentProps> = ({
     const openNotification = () => {
         setLoading(true)
         setIsModalOpen(true)
-        axiosApi.request(requestInfo).then(e => {
+        request(requestInfo)
+        .then(e => {
             let res = responseHandler(e)
             setArgs(res)
             setLoading(false)

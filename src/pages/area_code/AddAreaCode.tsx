@@ -4,7 +4,7 @@ import {AreaCodeDataType, OriginalAreaCodeInfo} from "../../data_types/AreaCodeD
 import SelectOriginalAreaCodeInfo from "./SelectOriginalAreaCodeInfo";
 import InputAreaCode from "./InputAreaCode"
 import React, {useState} from "react";
-import {addAreaCode, searchAreaPrefix} from "../../api/WinhcAreaCodeApi";
+import {addAreaCode, searchAreaPrefix} from "../../services/WinhcAreaCodeApi";
 import {useNavigate} from "react-router-dom";
 
 

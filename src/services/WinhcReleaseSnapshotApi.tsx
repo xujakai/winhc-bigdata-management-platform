@@ -1,7 +1,6 @@
 import { api } from './api';
 import { ReleaseSnapshotDataType } from "../data_types/ReleaseSnapshotDataType";
 
-// 获取区域代码列表
 export const getSnapshotByTimeRange = (
     subject: string, 
     minData?: string | null | undefined, 
@@ -17,7 +16,6 @@ export const getSnapshotByTimeRange = (
     return api.get<ReleaseSnapshotDataType[]>(`/snapshot/${subject}/time-range`, { params });
 };
 
-// 撤销事件
 export const revokeLatestReleaseSnapshot = (subject: string) => {
     return api.get<string>(`/snapshot/${subject}/revoke-latest`);
 };

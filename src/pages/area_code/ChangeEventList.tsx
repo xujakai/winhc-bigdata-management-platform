@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {Button, Descriptions, DescriptionsProps, message, Modal, Pagination, Timeline, Tooltip} from 'antd';
-import {getChangeList, releaseSnapshot, revokeEvent} from "../../api/WinhcAreaCodeApi";
+import {getChangeList, releaseSnapshot, revokeEvent} from "../../services/WinhcAreaCodeApi";
 import {ChangeEventDataType} from "../../data_types/ChangeEventDataType";
 import {TimelineItemProps} from "antd/es/timeline/TimelineItem";
 import {ProCard, ProFormField} from "@ant-design/pro-components";
-import {getSnapshotByTimeRange, revokeLatestReleaseSnapshot} from "../../api/WinhcReleaseSnapshotApi";
+import {getSnapshotByTimeRange, revokeLatestReleaseSnapshot} from "../../services/WinhcReleaseSnapshotApi";
 import {ReleaseSnapshotDataType} from "../../data_types/ReleaseSnapshotDataType";
 import {findMax, findMin} from "../../utils/ArrayUtils";
 import {addProperty} from "../../utils/ObjectUtils";

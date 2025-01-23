@@ -1,100 +1,97 @@
 import React, {useState} from 'react';
 import {AutoComplete, Flex} from 'antd';
 import {AreaCodeDataType} from "../../data_types/AreaCodeDataTypes"
-import {searchAreaPrefix} from "../../api/WinhcAreaCodeApi";
-
+import {searchAreaPrefix} from "../../services/WinhcAreaCodeApi";
 
 interface ChildComponentProps {
-    sendDataToParent: (index: number, data: AreaCodeDataType) => void;  // 父组件传递的回调函数
-    clearDataToParent: (index: number) => void;  // 父组件传递的回调函数
+    sendDataToParent: (index: number, data: AreaCodeDataType) => void;
+    clearDataToParent: (index: number) => void;
     index: number;
     sendValueToParent?: (value: string) => void;
-    style?: React.CSSProperties
-    initValue?: string | null
+    style?: React.CSSProperties;
+    initValue?: string | null;
 }
 
-
-const Title: React.FC<Readonly<{ title?: string }>> = (props) => (
+const Title: React.FC<{ title?: string }> = ({title}) => (
     <Flex align="center" justify="space-between">
-        {props.title}
+        {title}
     </Flex>
 );
 
-const renderItem = (area_code: AreaCodeDataType) => ({
-    value: area_code.area_code,
+const renderItem = (areaCode: AreaCodeDataType) => ({
+    value: areaCode.area_code,
     label: (
         <Flex align="center" justify="space-between">
-            ({area_code.area_code}){area_code.city}-{area_code.district}
+            ({areaCode.area_code}){areaCode.city}-{areaCode.district}
         </Flex>
     ),
 });
 
+const SearchAreaCode: React.FC<ChildComponentProps> = ({
+    sendDataToParent,
+    clearDataToParent,
+    sendValueToParent,
+    index,
+    style,
+    initValue
+}) => {
+    const [searchOptions, setSearchOptions] = useState<any[]>([]);
+    const [searchResult, setSearchResult] = useState<AreaCodeDataType[]>([]);
 
-const App: React.FC<ChildComponentProps> = ({
-                                                sendDataToParent,
-                                                clearDataToParent,
-                                                sendValueToParent,
-                                                index,
-                                                style,
-                                                initValue
-                                            }) => {
-    const [search_options, setSearchOptions] = useState<any[]>([]);
-    const [search_result, setSearchResult] = useState<AreaCodeDataType[]>([]);
-
-    const selectAreaCode = (value: string, option: any) => {
-
-        console.log("search_result:", search_result)
-        console.log("click:", value, option)
-        sendDataToParent(index, search_result.filter(e => e.area_code === value).pop() as AreaCodeDataType);
-    }
+    const selectAreaCode = (value: string) => {
+        const selectedArea = searchResult.find(e => e.area_code === value);
+        if (selectedArea) {
+            sendDataToParent(index, selectedArea);
+        }
+    };
 
     const cleanAreaCode = () => {
         clearDataToParent(index);
-    }
-
-    const onChange = (value: string) => {
-        console.log('input val: ', value)
-        if (sendValueToParent) {
-            sendValueToParent(value)
-        }
-    }
-
-    const searchAreaCode = (value: string) => {
-        searchAreaPrefix<{ [key: string]: AreaCodeDataType[] }>(value).then(data => {
-            let tmpOptions: any[];
-            tmpOptions = []
-            Object.entries(data).forEach(([key, value]) => {
-                let tmpO: any[] = [];
-                value.forEach(v => {
-                    tmpO.push(renderItem(v))
-                    setSearchResult((prevItems) => [...prevItems, v])
-                });
-                tmpOptions.push(
-                    {
-                        label: <Title title={key}/>,
-                        options: tmpO,
-                    }
-                )
-            });
-            setSearchOptions(tmpOptions)
-        });
+        setSearchResult([]);
+        setSearchOptions([]);
     };
 
+    const onChange = (value: string) => {
+        if (sendValueToParent) {
+            sendValueToParent(value);
+        }
+    };
+
+    const searchAreaCode = async (value: string) => {
+        if (!value) {
+            setSearchOptions([]);
+            setSearchResult([]);
+            return;
+        }
+
+        try {
+            const data = await searchAreaPrefix<{ [key: string]: AreaCodeDataType[] }>(value);
+            const options = Object.entries(data).map(([key, values]) => ({
+                label: <Title title={key}/>,
+                options: values.map(v => {
+                    setSearchResult(prev => [...prev, v]);
+                    return renderItem(v);
+                }),
+            }));
+            setSearchOptions(options);
+        } catch (error) {
+            console.error('搜索区域代码失败:', error);
+        }
+    };
 
     return (
         <AutoComplete
             value={initValue}
-            style={{...style}}
+            style={style}
             onChange={onChange}
             popupClassName="certain-category-search-dropdown"
-            options={search_options}
+            options={searchOptions}
             onSearch={searchAreaCode}
             onSelect={selectAreaCode}
             onClear={cleanAreaCode}
             placeholder="输入area_code"
         />
-    )
-}
+    );
+};
 
-
-export default App;
+export default SearchAreaCode;

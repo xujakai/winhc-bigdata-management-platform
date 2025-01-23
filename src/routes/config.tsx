@@ -4,7 +4,7 @@ import type { MenuProps } from 'antd';
 
 export interface RouteConfig {
   path: string;
-  element: React.ReactNode;
+  element?: React.ReactNode;
   label: string;
   icon?: React.ReactNode;
   children?: RouteConfig[];
@@ -18,6 +18,8 @@ const Settings = React.lazy(() => import('../pages/system/Settings'));
 const Login = React.lazy(() => import('../pages/auth/Login'));
 const NotFound = React.lazy(() => import('../pages/error/NotFound'));
 const AreaCodeView = React.lazy(() => import('../pages/area_code/AreaCodeView'));
+const AreaCodeChange = React.lazy(() => import('../pages/area_code/AddAreaCode'));
+const AreaCodeChangeEventList = React.lazy(() => import('../pages/area_code/ChangeEventList'));
 
 export const routes: RouteConfig[] = [
   {
@@ -48,11 +50,30 @@ export const routes: RouteConfig[] = [
     auth: true,
   },
   {
-    path: '/area-code/view',
-    element: <AreaCodeView />,
+    path: '/area-code',
     label: '区划管理',
     icon: <TableOutlined />,
     auth: true,
+    children: [
+      {
+        path: '/area-code/view',
+        element: <AreaCodeView />,
+        label: '区划列表',
+        auth: true,
+      },
+      {
+        path: '/area-code/add',
+        element: <AreaCodeChange />,
+        label: '新增区划',
+        auth: true,
+      },
+      {
+        path: '/area-code/change-list',
+        element: <AreaCodeChangeEventList />,
+        label: '变更记录',
+        auth: true,
+      }
+    ]
   },
   {
     path: '*',
@@ -64,11 +85,14 @@ export const routes: RouteConfig[] = [
 
 export const getMenuItems = (routes: RouteConfig[]): MenuProps['items'] => {
   return routes
-    .filter(route => route.auth && route.icon) // Only show authenticated routes with icons in menu
+    .filter(route => route.auth && route.path !== '*' && route.icon)
     .map((route) => ({
       key: route.path,
       icon: route.icon,
       label: route.label,
-      children: route.children ? getMenuItems(route.children) : undefined,
+      children: route.children ? route.children.map(child => ({
+        key: child.path,
+        label: child.label,
+      })) : undefined,
     }));
 };

@@ -11,7 +11,11 @@ const mockUser = {
 const mockToken = 'mock-jwt-token-12345';
 
 // Mock login function
-export const mockLogin = async (username: string, password: string) => {
+export const mockLogin = async (username: string, password: string): Promise<{
+  user: typeof mockUser;
+  token: string;
+  message: string;
+}> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   

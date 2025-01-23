@@ -3,11 +3,10 @@ import {Button, message, Segmented, Space} from "antd";
 import {AreaCodeDataType} from "../../data_types/AreaCodeDataTypes";
 import AreaCodeSort from "./AreaCodeTableSort"
 import AreaCodeEdit from "./AreaCodeTableEdit"
-import {getAreaCodeList, updateAreaCodeLevel, updateAreaCodeView} from "../../api/WinhcAreaCodeApi";
+import {getAreaCodeList, updateAreaCodeLevel, updateAreaCodeView} from "../../services/WinhcAreaCodeApi";
 import {copyObject} from "../../utils/ObjectUtils";
 import {ProColumns, ProTable} from "@ant-design/pro-components";
 import {explodeAreaCode, findDifference} from "../../utils/AreaCodeChangeFindUtils";
-
 
 const areaLevelEnum: Record<number, { text: string; status?: string }> = {
     1: {text: '省级'},
@@ -16,7 +15,6 @@ const areaLevelEnum: Record<number, { text: string; status?: string }> = {
     4: {text: '乡镇'},
 };
 
-
 const columns: ProColumns<AreaCodeDataType>[] = [
     {
         key: 'handShank',
@@ -24,8 +22,8 @@ const columns: ProColumns<AreaCodeDataType>[] = [
         dataIndex: '11',
         width: 80,
         readonly: true,
-        editable:false,
-        render: (text, record, _, action) => <>&nbsp;</>
+        editable: false,
+        render: () => <>&nbsp;</>
     },
     {
         title: '行政区划code',
@@ -93,12 +91,6 @@ const columns: ProColumns<AreaCodeDataType>[] = [
         valueType: 'select',
         valueEnum: areaLevelEnum,
     },
-    // {
-    //     title: '排序优先级',
-    //     dataIndex: 'sort',
-    //     key: 'sort',
-    //     readonly: true,
-    // },
     {
         title: '是否删除',
         dataIndex: 'deleted',
@@ -118,76 +110,73 @@ const columns: ProColumns<AreaCodeDataType>[] = [
                 status: 'Error',
             },
         },
-
     },
 ];
 
-
-const App: React.FC = () => {
+const AreaCodeView: React.FC = () => {
     const [data, setData] = useState<readonly AreaCodeDataType[]>([]);
     const [backupData, setBackupData] = useState<AreaCodeDataType[]>([])
     const [loading, setLoading] = useState(true);
-
-
-    const [optType, setOptType] = useState<String>('view');
+    const [optType, setOptType] = useState<string>('view');
     const [awaitSubmitData, setAwaitSubmitData] = useState<AreaCodeDataType[]>([]);
     const [reload, setReload] = useState<boolean>(true);
     const [renderColumns, setRenderColumns] = useState<ProColumns<AreaCodeDataType>[]>(columns);
 
-
-    const saveChange = () => {
-        // message.success("点击提交啦！" + JSON.stringify(awaitSubmitData))
-        if (optType === 'edit') {
-            updateAreaCodeView(awaitSubmitData).then(e => {
-                message.success(e);
-                setAwaitSubmitData([])
-                setOptType("view")
-                setReload(!reload)
-            })
+    const saveChange = async () => {
+        try {
+            if (optType === 'edit') {
+                const response = await updateAreaCodeView(awaitSubmitData);
+                message.success(response);
+                setAwaitSubmitData([]);
+                setOptType("view");
+                setReload(!reload);
+            }
+            if (optType === 'sort') {
+                const response = await updateAreaCodeLevel(awaitSubmitData);
+                message.success(response);
+                setAwaitSubmitData([]);
+                setOptType("view");
+                setReload(!reload);
+            }
+            setAwaitSubmitData([]);
+        } catch (error) {
+            message.error('保存失败：' + (error instanceof Error ? error.message : '未知错误'));
         }
-        if (optType === 'sort') {
-            updateAreaCodeLevel(awaitSubmitData).then(e => {
-                message.success(e);
-                setAwaitSubmitData([])
-                setOptType("view")
-                setReload(!reload)
-            })
-        }
-        setAwaitSubmitData([])
-    }
+    };
 
     useEffect(() => {
-        setLoading(true);
-        getAreaCodeList<AreaCodeDataType[]>().then(
-            e => {
-                console.log(e)
-                setData(e);
-                setBackupData(copyObject(e))
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const response = await getAreaCodeList<AreaCodeDataType[]>();
+                setData(response);
+                setBackupData(copyObject(response));
+            } catch (error) {
+                message.error('获取数据失败：' + (error instanceof Error ? error.message : '未知错误'));
+            } finally {
                 setLoading(false);
             }
-        )
-    }, [reload]);  // 空依赖数组，确保只在组件挂载时请求数据
+        };
+        fetchData();
+    }, [reload]);
 
     useEffect(() => {
-        let oldData = explodeAreaCode(backupData)
-        let newData = explodeAreaCode(data)
-        let diffData = findDifference(oldData, newData)
-        setAwaitSubmitData(diffData)
-
+        const oldData = explodeAreaCode(backupData);
+        const newData = explodeAreaCode(data);
+        const diffData = findDifference(oldData, newData);
+        setAwaitSubmitData(diffData);
     }, [data, backupData]);
 
     useEffect(() => {
         if (optType === 'sort') {
-            setRenderColumns([...columns,])
+            setRenderColumns([...columns]);
         } else if (optType === 'edit') {
-            setRenderColumns(columns)
+            setRenderColumns(columns);
         } else {
-            setRenderColumns(columns)
-            setData(copyObject(backupData))
+            setRenderColumns(columns);
+            setData(copyObject(backupData));
         }
-
-    }, [optType]);
-
+    }, [optType, backupData]);
 
     return (
         <>
@@ -201,26 +190,43 @@ const App: React.FC = () => {
                         {label: '层级/排序', value: 'sort'},
                     ]}
                 />
-                {
-                    optType === 'view' ? <></> :
-                        <Button disabled={awaitSubmitData.length === 0}
-                                onClick={(event: React.MouseEvent<HTMLElement, MouseEvent>) => {
-                                    saveChange()
-                                }}>保存</Button>
-                }
+                {optType !== 'view' && (
+                    <Button 
+                        disabled={awaitSubmitData.length === 0}
+                        onClick={saveChange}
+                    >
+                        保存
+                    </Button>
+                )}
             </Space>
-            {optType === 'sort' ? <AreaCodeSort
-                renderColumns={renderColumns}
-                data={data as AreaCodeDataType[]} loading={loading}
-                setData={setData}/> : optType === 'edit' ?
-                <AreaCodeEdit renderColumns={renderColumns}
-                              data={data} loading={loading}
-                              setData={setData} editable={optType !== 'edit'}/> :
-                <ProTable columns={columns} dataSource={data} loading={loading} pagination={false} search={false}
-                          options={false}
-                          rowKey="area_code" />}
+            {optType === 'sort' ? (
+                <AreaCodeSort
+                    renderColumns={renderColumns}
+                    data={data as AreaCodeDataType[]} 
+                    loading={loading}
+                    setData={setData}
+                />
+            ) : optType === 'edit' ? (
+                <AreaCodeEdit 
+                    renderColumns={renderColumns}
+                    data={data} 
+                    loading={loading}
+                    setData={setData} 
+                    editable={optType !== 'edit'}
+                />
+            ) : (
+                <ProTable 
+                    columns={columns} 
+                    dataSource={data} 
+                    loading={loading} 
+                    pagination={false} 
+                    search={false}
+                    options={false}
+                    rowKey="area_code" 
+                />
+            )}
         </>
-    )
+    );
 };
 
-export default App;
+export default AreaCodeView;

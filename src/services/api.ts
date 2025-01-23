@@ -1,19 +1,16 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { message } from 'antd';
 
-// API configuration
 const API_CONFIG = {
-  baseURL: 'http://xjk:8288', // 设置基础URL
-  timeout: 30000, // 请求超时时间
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  timeout: 30000,
   headers: {
-      'Content-Type': 'application/json',
+    'Content-Type': 'application/json',
   },
 };
 
-// Create axios instance
 const instance: AxiosInstance = axios.create(API_CONFIG);
 
-// Request interceptor
 instance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -23,11 +20,11 @@ instance.interceptors.request.use(
     return config;
   },
   (error) => {
+    message.error('请求发送失败');
     return Promise.reject(error);
   }
 );
 
-// Response interceptor
 instance.interceptors.response.use(
   (response) => {
     return response.data;
@@ -36,29 +33,32 @@ instance.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          // Handle unauthorized access
           localStorage.removeItem('token');
           window.location.href = '/login';
+          message.error('登录已过期，请重新登录');
           break;
         case 403:
-          message.error('Access forbidden');
+          message.error('没有权限访问');
           break;
         case 404:
-          message.error('Resource not found');
+          message.error('请求的资源不存在');
           break;
         case 500:
-          message.error('Server error');
+          message.error('服务器错误');
           break;
         default:
-          message.error('An error occurred');
+          message.error('发生错误：' + (error.response.data?.message || '未知错误'));
       }
+    } else if (error.request) {
+      message.error('无法连接到服务器');
+    } else {
+      message.error('请求配置错误');
     }
     return Promise.reject(error);
   }
 );
 
-// Generic request method
-const request = async <T>(config: AxiosRequestConfig): Promise<T> => {
+export const request = async <T>(config: AxiosRequestConfig): Promise<T> => {
   try {
     const response = await instance.request<any, AxiosResponse<T>>(config);
     return response.data;
@@ -67,7 +67,6 @@ const request = async <T>(config: AxiosRequestConfig): Promise<T> => {
   }
 };
 
-// API methods
 export const api = {
   get: <T>(url: string, params?: any) =>
     request<T>({ method: 'GET', url, params }),

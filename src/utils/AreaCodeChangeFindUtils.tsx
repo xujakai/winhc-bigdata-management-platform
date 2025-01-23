@@ -1,9 +1,6 @@
 import {AreaCodeDataType} from "../data_types/AreaCodeDataTypes";
 import {copyObject, deepEqual, removeProperties} from "./ObjectUtils";
-import exp from "node:constants";
-import {getAreaCodeList} from "../api/WinhcAreaCodeApi";
 import {message} from "antd";
-
 
 export function explodeAreaCode(data: readonly AreaCodeDataType[], result: AreaCodeDataType[] = []): AreaCodeDataType[] {
     for (let i = 0; i < data.length; i++) {
@@ -31,7 +28,6 @@ export function findDifference(oldData: AreaCodeDataType[], newData: AreaCodeDat
     return difList
 }
 
-
 export interface AreaCodeLevelInfo {
     currentAreaCode: string;
     level: number;
@@ -39,11 +35,8 @@ export interface AreaCodeLevelInfo {
     find: boolean;
 }
 
-
 export const findViewLevel = (data: AreaCodeDataType[], area_code: string, depth: number = 1, superior_area_code: string[] = []): AreaCodeLevelInfo | null => {
-    let flag = data.some((element, index, array) => {
-        return area_code === element.area_code;
-    })
+    let flag = data.some((element) => area_code === element.area_code);
     if (flag) {
         return {
             currentAreaCode: area_code,
@@ -114,7 +107,6 @@ function leftMoveFunc(data: AreaCodeDataType[], currentData: AreaCodeDataType, l
     return data;
 }
 
-//获取同级的周边一个areaCode
 function getAroundAreaCode(data: AreaCodeDataType[], area_code: string): string | null {
     let index = data.findIndex(e => e.area_code === area_code)
     if (index === 0) {
@@ -168,12 +160,3 @@ export function moveLevel(allData: AreaCodeDataType[], currentData: AreaCodeData
     }
     return copyObject(allData);
 }
-
-
-// getAreaCodeList<AreaCodeDataType[]>().then(
-//     e => {
-//         let res = getAroundAreaCode(e, '110102')
-//         console.log(res)
-//
-//     }
-// )
